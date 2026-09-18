@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@notionhq/client": "^5.26.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "googleapis": "^181.0.0",

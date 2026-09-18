@@ -4,6 +4,7 @@ import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import AddTaskForm from "@/components/add-task-form";
+import NotionTasks from "@/components/tasks";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -16,7 +17,8 @@ export default function Home() {
     return (
       <div>
         <p className="text-sm">Signed in as {session.user?.email}</p>
-        <AddTaskForm />
+        {/* <AddTaskForm /> */}
+        <NotionTasks />
       </div>
     );
   }

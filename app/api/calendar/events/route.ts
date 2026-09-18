@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { title, description, startTime, endTime, location } = body
+    const { title, description, startTime, endTime, location , colorId} = body
 
     // Basic validation
     if (!title || !startTime || !endTime) {
@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
       summary: title,
       description: description || "",
       location: location || "",
+      colorId: colorId || "5",
       start: {
         dateTime: startTime, // Example: "2026-09-20T10:00:00+05:30"
         timeZone: "Asia/Kolkata", // Change if needed

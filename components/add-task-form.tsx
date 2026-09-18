@@ -12,9 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import ColorPicker from "./color-picker";
 
 export default function AddTaskForm() {
   const [loading, setLoading] = useState(false);
+  const [colorId, setColorId] = useState("7");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,6 +38,7 @@ export default function AddTaskForm() {
       startTime: new Date(start).toISOString(),
       endTime: new Date(end).toISOString(),
       location: formData.get("location"),
+      colorId: colorId,
     };
 
     try {
@@ -119,6 +122,11 @@ export default function AddTaskForm() {
               name="location"
               placeholder="Office / Zoom / Home"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Event Color</Label>
+            <ColorPicker value={colorId} onChange={setColorId}/>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
