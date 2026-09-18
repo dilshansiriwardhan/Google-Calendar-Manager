@@ -23,8 +23,9 @@ export async function GET() {
       return {
         id: page.id,
         title: props.Name?.title?.[0]?.plain_text || "Untitled",
-        category: props.Category?.status?.name || props.Category?.select?.name || null,
-        date: props.date?.date?.name || null,
+        category: props.Category?.select?.name || null,
+        categoryColor: props.Category?.select?.color || null,
+        date: props.date?.date?.start || null,
       }
     })
 
