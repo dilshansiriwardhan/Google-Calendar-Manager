@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import DatePicker from "./date-picker";
 
 const calendarColors = [
   "3", // Purple
@@ -26,11 +27,10 @@ function getCategoryColor(category: string) {
 }
 
 const categoryOrder = [
-  "Personal Development",
   "Cloud Engineer",
-  "Graphic Designer",
+  "Freelancing",
   "Content Creator",
-  "Developer",
+  "Personal Brand",
 ];
 
 export default function NotionTasks() {
@@ -38,6 +38,7 @@ export default function NotionTasks() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const sortedTasks = [...tasks].sort((a, b) => {
     const indexA = categoryOrder.indexOf(a.category);
@@ -52,11 +53,12 @@ export default function NotionTasks() {
     fetch("/api/notion/tasks")
       .then((res) => res.json())
       .then((data) => {
+        console.log(data);
         setTasks(data.tasks || []);
+
         setLoading(false);
       });
   }, []);
-
   const addTasksToCalendar = async () => {
     if (tasks.length === 0) {
       setMessage("No tasks to add");
@@ -66,51 +68,71 @@ export default function NotionTasks() {
     setAdding(true);
     setMessage("");
 
-    try {
-      const payload = sortedTasks.map((task, index) => {
-        // Use Notion date if available, otherwise use current time
-        const start = task.date ? new Date(task.date) : new Date();
-        start.setHours(6 + index, 0, 0, 0);
+    const grouped = categoryOrder.reduce((acc: any, category) => {
+      acc[category] = sortedTasks.filter((task) => task.category === category);
+      return acc;
+    }, {});
 
-        // Default duration = 1 hour
-        const end = new Date(start);
-        end.setHours(end.getHours() + 1);
+    // console.log(grouped);
 
-        return {
-          title: task.title,
-          description: task.category || "",
-          startTime: start.toISOString(),
-          endTime: end.toISOString(),
-          colorId: getCategoryColor(task.categoryColor || "Other"),
-        };
-      });
+    categoryOrder.forEach(async (category) => {
+      if (grouped[category].length > 0) {
+        console.log(`\n===== ${category} =====`);
+        const byCat = grouped[category].map((task: any, index: any) => {
+          const start = new Date(selectedDate);
+          const end = new Date(start);
 
-      const res = await fetch("/api/calendar/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+          // start.setHours(6 + index, 0, 0, 0);
+          if (category === categoryOrder[0]) {
+            start.setHours(6 + index, 0, 0, 0);
+            end.setTime(start.getTime() + 60 * 60 * 1000);
+          } else if (category === categoryOrder[1]) {
+            start.setHours(13 + index, 0, 0, 0);
+            end.setTime(start.getTime() + 60 * 60 * 1000);
+          } else if (category === categoryOrder[2]) {
+            start.setHours(18 + index, 0, 0, 0);
+            end.setTime(start.getTime() + 60 * 60 * 1000);
+          } else {
+            start.setHours(22 + index, 0, 0, 0);
+            end.setTime(start.getTime() + 60 * 60 * 1000);
+          }
+          return {
+            title: task.title,
+            description: task.category || "",
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            colorId: getCategoryColor(task.categoryColor || "Other"),
+          };
+        });
+        console.log(byCat);
+        try {
+          const res = await fetch("/api/calendar/tasks", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(byCat),
+          });
 
-      const data = await res.json();
+          const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to add events");
+          if (!res.ok) {
+            throw new Error(data.error || "Failed to add events");
+          }
+
+          setMessage(
+            `✅ Successfully added ${byCat.length} events to Google Calendar!`,
+          );
+        } catch (error: any) {
+          setMessage(`❌ ${error.message}`);
+        } finally {
+          setAdding(false);
+        }
       }
-
-      setMessage(
-        `✅ Successfully added ${payload.length} events to Google Calendar!`,
-      );
-    } catch (error: any) {
-      setMessage(`❌ ${error.message}`);
-    } finally {
-      setAdding(false);
-    }
+    });
   };
 
   if (loading) return <p>Loading Notion tasks...</p>;
-
   return (
     <div className="my-3 grid grid-cols-2 gap-6">
       {/* Left - Notion Tasks List */}
@@ -136,6 +158,7 @@ export default function NotionTasks() {
 
       {/* Right - Action Button */}
       <div className="flex flex-col gap-4">
+        <DatePicker date={selectedDate} setDate={setSelectedDate} />
         <Button
           onClick={addTasksToCalendar}
           disabled={adding || tasks.length === 0}

@@ -1,47 +1,40 @@
-import { Client } from "@notionhq/client";
-import { NextResponse } from "next/server";
+import { Client } from "@notionhq/client"
+import { NextResponse } from "next/server"
 
 const notion = new Client({
   auth: process.env.NOTION_API_KEY,
-});
+})
 
 export async function GET() {
   try {
     const response = await notion.dataSources.query({
       data_source_id: process.env.NOTION_DATABASE_ID!,
-      filter: {
-        property: "Done",
-        checkbox: {
-          equals: false,
-        },
-      },
       sorts: [
         {
-          property: "Category",
-          direction: "ascending", // Or "descending" depending on your needs
+          timestamp: "last_edited_time",
+          direction: "descending",
         },
       ],
-    });
-
+    })
+    
     const tasks = response.results.map((page: any) => {
-      const props = page.properties;
+      const props = page.properties
 
       return {
         id: page.id,
         title: props.Name?.title?.[0]?.plain_text || "Untitled",
         category: props.Category?.select?.name || null,
-        isDone: props.Done?.checkbox,
         categoryColor: props.Category?.select?.color || null,
-        date: props.Date?.date?.start || null,
-      };
-    });
+        date: props.date?.date?.start || null,
+      }
+    })
 
-    return NextResponse.json({ tasks });
+    return NextResponse.json({ response })
   } catch (error: any) {
-    console.error("Notion API Error:", error);
+    console.error("Notion API Error:", error)
     return NextResponse.json(
       { error: error.message || "Failed to fetch Notion tasks" },
-      { status: 500 },
-    );
+      { status: 500 }
+    )
   }
 }
